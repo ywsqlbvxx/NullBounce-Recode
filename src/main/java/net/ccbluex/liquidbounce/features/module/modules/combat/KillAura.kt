@@ -82,7 +82,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val simulateCooldown by boolean("SimulateCooldown", false)
     private val simulateDoubleClicking by boolean("SimulateDoubleClicking", false) { !simulateCooldown }
 
-    private val cps by intRange("CPS", 5..8, 1..50) { !simulateCooldown }.onChanged {
+    private val cps by intRange("CPS", 5..8, 1..250) { !simulateCooldown }.onChanged {
         attackDelay = randomClickDelay(it)
     }
 
@@ -94,11 +94,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val clickOnly by boolean("ClickOnly", false)
 
     // Range
-    private val range: Float by float("Range", 3f, 1f..8f, suffix = "blocks")
-    private val scanRange by floatRange("ScanRange", 2f..2f, 0f..10f, suffix = "blocks").onChanged {
+    private val range: Float by float("Range", 3f, 1f..20f, suffix = "blocks")
+    private val scanRange by floatRange("ScanRange", 2f..2f, 0f..15f, suffix = "blocks").onChanged {
         randomizedScanRange = it.random()
     }
-    private val throughWallsRange by float("ThroughWallsRange", 3f, 0f..8f, suffix = "blocks")
+    private val throughWallsRange by float("ThroughWallsRange", 3f, 0f..10f, suffix = "blocks")
     private val rangeSprintReduction by float("RangeSprintReduction", 0f, 0f..0.4f, suffix = "blocks")
 
     // Modes
@@ -123,7 +123,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val limitedMultiTargets by int("LimitedMultiTargets", 0, 0..50) { targetMode == "Multi" }
 
     private val maxSwitchFOV by float("MaxSwitchFOV", 90f, 30f..180f, suffix = "º") { targetMode == "Switch" }
-    private val switchDelay by int("SwitchDelay", 15, 1..1000, suffix = "ms") { targetMode == "Switch" }
+    private val switchDelay by int("SwitchDelay", 15, 0..1000, suffix = "ms") { targetMode == "Switch" }
 
     private val swing by boolean("Swing", true)
     // TODO: Remove this, since the KeepSprint module does the same thing
@@ -141,7 +141,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val blockMaxEnemyRange by float("BlockMaxEnemyRange", 3f, 0f..8f, suffix = "blocks") { autoBlock == "Packet" }
 
     private val unblockMode by choices(
-        "UnblockMode", arrayOf("Stop", "Switch", "Empty"), "Stop"
+        "UnblockMode", arrayOf("Stop", "Switch", "Empty", "Cancel"), "Stop"
     ) { autoBlock == "Packet" }
 
     private val releaseAutoBlock by boolean("ReleaseAutoBlock", true) { autoBlock == "Packet" }
@@ -487,7 +487,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                     stopBlocking(true)
                 }
             } else {
-                // Fix: Trigger true packet blocking when target is in range and conditions are met
+                // Trigger true packet blocking when target is in range and conditions are met
                 if (!blockStatus && autoBlock == "Packet" && canBlock) {
                     startBlocking(target!!, interactAutoBlock, false)
                 }
@@ -1110,6 +1110,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                             switchToSlot(it)
                         }
                     }
+
+                    "Cancel" -> {
+                        // Do nothing, full blocking active :p
+                    }
                 }
 
                 blockStatus = false
@@ -1128,6 +1132,16 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
     val onPacket = handler<PacketEvent> { event ->
         val player = mc.thePlayer ?: return@handler
+
+        if (autoBlock == "Packet" && unblockMode == "Cancel") {
+            val packet = event.packet
+            if (packet is C07PacketPlayerDigging && packet.status == RELEASE_USE_ITEM) {
+                if (target != null || renderBlocking) {
+                    event.cancel()
+                    return@handler
+                }
+            }
+        }
 
         if (autoBlock == "Off" || !blinkAutoBlock || !blinked) return@handler
 
