@@ -137,8 +137,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     // TODO: Remove the Fake mode, and fully replace it with the ForceBlockRender option?
     val autoBlock by choices("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
 
-    private val blockMaxRange by float("BlockMaxRange", 3f, 0f..8f, suffix = "blocks") { autoBlock == "Packet" }
-    private val blockMaxEnemyRange by float("BlockMaxEnemyRange", 3f, 0f..8f, suffix = "blocks") { autoBlock == "Packet" }
+    private val blockMaxRange by float("BlockMaxRange", 3f, 0f..20f, suffix = "blocks") { autoBlock == "Packet" }
+    private val blockMaxEnemyRange by float("BlockMaxEnemyRange", 3f, 0f..20f, suffix = "blocks") { autoBlock == "Packet" }
 
     private val unblockMode by choices(
         "UnblockMode", arrayOf("Stop", "Switch", "Empty", "Cancel"), "Stop"
