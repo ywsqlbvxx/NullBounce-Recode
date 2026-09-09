@@ -1,7 +1,7 @@
-# LibreBounce
-A [libre software](https://www.gnu.org/philosophy/free-sw.html), mixin-based injection hacked client for the Forge Mod Loader, version 1.8.9; it's a fork of [LiquidBounce Legacy](https://github.com/CCBlueX/LiquidBounce/tree/legacy), aiming to compete with paid & non-libre hacked clients.
+# NullBounce Recode (LibreBounce)
+A [libre/free software](https://www.gnu.org/philosophy/free-sw.html), mixin-based injection hacked client for the Forge Mod Loader, version 1.8.9; it's a fork of [LiquidBounce Legacy](https://github.com/CCBlueX/LiquidBounce/tree/legacy) and [LibreBounce](https://github.com/LibreBounce/LibreBounce), aiming to compete with paid & non-libre hacked clients.
 
-If anyone would like to contact me through Discord, my username is `thatonecoder_`. More contact methods may be found through my [Codeberg profile page](https://codeberg.org/thatonecoder), although I cannot guarantee any attempts will be successful.
+For helping purposes with the original LibreBounce dev: If anyone would like to contact me through Discord, my username is `thatonecoder_`. More contact methods may be found through my [Codeberg profile page](https://codeberg.org/thatonecoder), although I cannot guarantee any attempts will be successful.
 
 Divergences from LiquidBounce Legacy are listed in the [changelog](CHANGELOG.md); note that there are also many refactors, making the code much cleaner.
 
@@ -39,6 +39,7 @@ We highly appreciate contributions. If you would like to support us, feel free t
 2. Fix a bug where rotation modules still affect the player after being turned off.
 3. Make a centralized clicking system, with legit patterns.
 4. Add full backwards-compatibility with historical LiquidBounce versions (b68, b72).
+5. Add modern bypasses for current anticheats in certain servers (such as Verus, Vulcan, Old/Latest Intave)
 
 Any additional goals are easily found by code searching "TO-DO", and are equally as important, if not more.
 If you have experience in one or more of these fields, we would highly appreciate your support.
