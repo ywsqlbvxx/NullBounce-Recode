@@ -482,15 +482,21 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         if (target != null) {
             val distance = player.getDistanceToEntityBox(target!!)
 
-            if (distance > blockMaxRange && blockStatus) {
-                stopBlocking(true)
-                return@handler
+            if (distance > blockMaxRange) {
+                if (blockStatus) {
+                    stopBlocking(true)
+                }
             } else {
-                if (autoBlock != "Off" && !releaseAutoBlock) {
+                // Fix: Trigger true packet blocking when target is in range and conditions are met
+                if (!blockStatus && autoBlock == "Packet" && canBlock) {
+                    startBlocking(target!!, interactAutoBlock, false)
+                }
+                
+                if (autoBlock != "Off") {
                     renderBlocking = true
                 }
             }
-
+            
             // Usually when you butterfly click, you end up clicking two (and possibly more) times in a single tick.
             // Sometimes you also do not click. The positives outweigh the negatives, however.
             val extraClicks = if (simulateDoubleClicking && !simulateCooldown) nextInt(-1, 1) else 0
