@@ -1,38 +1,35 @@
-name: Build NullBounce
+name: Build NullBounce Jar
 
 on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository and submodules
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Setup Java 8 (Temurin)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 8 (Temurin)
         uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: "8"
-          cache: "gradle"
+          distribution: 'temurin'
+          java-version: '8'
+          cache: 'gradle'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+      - name: Grant execute permission
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            fs.chmodSync('gradlew', '755');
 
-      - name: Setup CI Workspace (Crucial for ForgeGradle plugins)
-        run: ./gradlew --no-daemon setupCiWorkspace
+      - name: Build with Gradle
+        run: ./gradlew --no-daemon clean build --refresh-dependencies
 
-      - name: Build client JAR
-        run: ./gradlew --no-daemon clean build
-
-      - name: Upload artifact
+      - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
-          name: NullBounce-R
+          name: NullBounce-Client
           path: build/libs/*.jar
