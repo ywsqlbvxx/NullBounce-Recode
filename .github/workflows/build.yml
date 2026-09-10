@@ -25,9 +25,11 @@ jobs:
         run: chmod +x gradlew
 
       - name: Initialize Workspace and Build
+        env:
+          GRADLE_OPTS: -Xmx4g -Dorg.gradle.daemon=false
         run: |
-          ./gradlew --no-daemon setupCiWorkspace --refresh-dependencies || true
-          ./gradlew --no-daemon clean build --refresh-dependencies
+          ./gradlew setupDevWorkspace --stacktrace
+          ./gradlew shadowJar --stacktrace
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
