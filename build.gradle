@@ -1,7 +1,7 @@
 buildscript {
     repositories {
         mavenCentral()
-        gradlePluginPortal() // <--- AGREGAMOS ESTO PARA QUE ENCUENTRE SHADOW Y GIT-PROPERTIES
+        maven { url = "https://plugins.gradle.org/m2/" }
         maven { url = "https://maven.minecraftforge.net/" }
         maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
     }
@@ -9,8 +9,9 @@ buildscript {
         classpath "net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT"
         classpath "org.spongepowered:mixingradle:0.6-SNAPSHOT"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
-        classpath "com.github.johnrengelman:shadow:6.1.0"
-        classpath "com.gorylenko.gradle-git-properties:gradle-git-properties:2.5.3"
+        // Cambiados a los nombres de librerías oficiales de Maven para resolver la ruta m2/
+        classpath "com.github.jengelman.gradle.plugins:shadow:6.1.0"
+        classpath "://plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:2.5.3"
     }
 }
 
