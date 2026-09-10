@@ -1,4 +1,4 @@
-name: Build NullBounce / LibreBounce Jar
+name: Build NullBounce Jar
 
 on:
   workflow_dispatch:
@@ -27,5 +27,5 @@ jobs:
       - name: Upload compiled JAR artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LibreBounce-Client-Jar
+          name: NullBounce-R
           path: build/libs/*.jar
