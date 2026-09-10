@@ -10,10 +10,10 @@ pluginManagement {
         eachPlugin {
             switch (requested.id.id) {
                 case "net.minecraftforge.gradle.forge":
-                    useModule("com.github.ccbluex.ForgeGradle:ForgeGradle:a3d86a59c0")
+                    useModule("com.github.CCBlueX:ForgeGradle:${forgegradle_version}")
                     break
                 case "org.spongepowered.mixin":
-                    useModule("com.github.xcfrg:mixingradle:ae2a80e")
+                    useModule("com.github.xcfrg:mixingradle:${mixingradle_version}")
                     break
             }
         }
