@@ -1,9 +1,9 @@
 buildscript {
     repositories {
         mavenCentral()
+        gradlePluginPortal() // <--- AGREGAMOS ESTO PARA QUE ENCUENTRE SHADOW Y GIT-PROPERTIES
         maven { url = "https://maven.minecraftforge.net/" }
         maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
-        maven { url = "https://gradle.org" }
     }
     dependencies {
         classpath "net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT"
