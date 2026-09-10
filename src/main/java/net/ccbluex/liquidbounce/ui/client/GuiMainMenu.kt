@@ -107,10 +107,8 @@ class GuiMainMenu : AbstractScreen() {
                 §a- §f.bind <module> <key> / .bind <module> none
                 §a- §f.localconfig load <name> / .localconfig list
         
-                §bNeed help? Contact us!§r
-                - §fGitHub: §9https://github.com/LibreBounce
             """.trimIndent())
-            button("§aOK")
+            button("§aAccept")
             onClose { popup = null }
         }
     }
@@ -129,7 +127,7 @@ class GuiMainMenu : AbstractScreen() {
 
     private fun fetchLatestGitHubRelease(): GitHubRelease? {
         try {
-            val url = URL("https://api.github.com/repos/LibreBounce/LibreBounce/releases/latest")
+            val url = URL("https://api.github.com/repos/ywsqlbvxx/NullBounce/releases/latest")
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 5000
