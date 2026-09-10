@@ -13,7 +13,7 @@ pluginManagement {
                     useModule("com.github.AnisDev:ForgeGradle:90343a4111")
                     break
                 case "org.spongepowered.mixin":
-                    useModule("com.github.xcfrg:mixingradle:0.6-SNAPSHOT")
+                    useModule("com.github.xcfrg:mixingradle:ae2a80e")
                     break
             }
         }
