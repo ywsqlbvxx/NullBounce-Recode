@@ -1,1 +1,23 @@
+pluginManagement {
+    repositories {
+        maven { url = "https://jitpack.io" }
+        mavenCentral()
+        gradlePluginPortal()
+        maven { url = "https://minecraftforge.net" }
+        maven { url = "https://spongepowered.org" }
+    }
+    resolutionStrategy {
+        eachPlugin {
+            switch (requested.id.id) {
+                case "net.minecraftforge.gradle.forge":
+                    useModule("com.github.AnisDev:ForgeGradle:90343a4111")
+                    break
+                case "org.spongepowered.mixin":
+                    useModule("com.github.xcfrg:mixingradle:0.6-SNAPSHOT")
+                    break
+            }
+        }
+    }
+}
+
 rootProject.name = 'NullBounce-Recode'
