@@ -2,13 +2,16 @@ name: Build NullBounce Jar
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ "main", "master" ]
 
 jobs:
   build:
+    name: Build 1.8.9 Forge Client
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository code
         uses: actions/checkout@v4
 
       - name: Set up Java 8 (Temurin)
@@ -18,15 +21,13 @@ jobs:
           java-version: '8'
           cache: 'gradle'
 
-      - name: Grant execute permission
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            fs.chmodSync('gradlew', '755');
+      - name: Grant execution permissions to Gradle wrapper
+        run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew --no-daemon clean build --refresh-dependencies
+      - name: Initialize Workspace and Build
+        run: |
+          ./gradlew --no-daemon setupCiWorkspace --refresh-dependencies || true
+          ./gradlew --no-daemon clean build --refresh-dependencies
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
