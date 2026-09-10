@@ -12,17 +12,18 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
-      - name: Set up Java 8
+      - name: Set up Java 8 (Temurin)
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '8'
+          cache: 'gradle'
 
       - name: Grant execution permissions to Gradle wrapper
         run: chmod +x gradlew
 
-      - name: Build the client JAR
-        run: ./gradlew clean build --no-daemon
+      - name: Build client JAR
+        run: ./gradlew build --no-daemon --refresh-dependencies
 
       - name: Upload compiled JAR artifact
         uses: actions/upload-artifact@v4
