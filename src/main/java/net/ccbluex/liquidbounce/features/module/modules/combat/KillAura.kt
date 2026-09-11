@@ -454,6 +454,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
             
             if (autoBlock != "Off") {
                 renderBlocking = true
+                
                 if (!blockStatus && canBlock && autoBlock == "Packet") {
                     startBlocking(target!!, interactAutoBlock, false)
                 }
@@ -1075,10 +1076,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                             switchToSlot(it)
                         }
                     }
-
+                    
                     "Cancel" -> {
-                            if (target == null) {
-                                sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+                        // Cancel mode does nothing
                     }
                 }
 
