@@ -5,7 +5,9 @@
  */
 package net.ccbluex.liquidbounce.lang
 
+
 import net.ccbluex.liquidbounce.file.configs.models.ClientConfiguration.overrideLanguage
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.client.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.client.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.io.decodeJson
