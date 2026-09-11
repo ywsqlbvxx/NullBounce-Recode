@@ -490,8 +490,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
             }
         } else {
             renderBlocking = false
+            
+            if (blockStatus) {
+                stopBlocking(true)
+            }
         }
-    }
 
     /**
      * Render event
@@ -1073,7 +1076,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                         }
                     }
 
-                    ""Cancel" -> {
+                    "Cancel" -> {
                             if (target == null) {
                                 sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
                     }
