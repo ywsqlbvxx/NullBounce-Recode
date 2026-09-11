@@ -32,7 +32,15 @@ jobs:
           cp "$JAR_FILE" build/output/NullBounce.jar
 
       - name: Upload artifact
+        id: upload-step # <--- ID agregado para capturar los datos
         uses: actions/upload-artifact@v4
         with:
           name: NullBounce-Client
           path: build/output/NullBounce.jar
+
+      - name: github why u removed direct links # <--- Nuevo paso para recuperar tu link
+        run: |
+          echo "===================================================="
+          echo "NullBounce has been built sucessfully! Save it here"
+          echo "${{ steps.upload-step.outputs.artifact-url }}"
+          echo "===================================================="
