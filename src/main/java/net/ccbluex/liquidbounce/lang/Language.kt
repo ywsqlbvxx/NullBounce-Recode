@@ -43,6 +43,7 @@ object LanguageManager : MinecraftInstance {
      * Languages are stored in assets/minecraft/$name/lang and when loaded will be stored in [languageMap]
      */
     fun loadLanguages() {
+        val name = CLIENT_NAME.lowercase()
         for (language in knownLanguages) {
             runCatching {
                 languageMap[language] = javaClass.getResourceAsStream("/assets/minecraft/$name/lang/$language.json")!!
