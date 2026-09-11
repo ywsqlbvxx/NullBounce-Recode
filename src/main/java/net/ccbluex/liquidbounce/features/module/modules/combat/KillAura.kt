@@ -137,9 +137,6 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     // TODO: Remove the Fake mode, and fully replace it with the ForceBlockRender option?
     val autoBlock by choices("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
 
-    private val blockMaxRange by float("BlockMaxRange", 3f, 0f..20f, suffix = "blocks") { autoBlock == "Packet" }
-    private val blockMaxEnemyRange by float("BlockMaxEnemyRange", 3f, 0f..20f, suffix = "blocks") { autoBlock == "Packet" }
-
     private val unblockMode by choices(
         "UnblockMode", arrayOf("Stop", "Switch", "Empty", "Cancel"), "Stop"
     ) { autoBlock == "Packet" }
@@ -169,33 +166,6 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val blinkBlockTicks by int("BlinkBlockTicks", 3, 2..5) {
         autoBlock == "Packet" && blinkAutoBlock
     }
-
-    // AutoBlock conditions
-    private val smartAutoBlock by boolean("SmartAutoBlock", false) { autoBlock == "Packet" }
-
-    // Ignore all blocking conditions, except for block rate, when standing still
-    private val forceBlock by boolean("ForceBlockWhenStill", true) { autoBlock == "Packet" && smartAutoBlock }
-
-    // Don't block if target isn't holding a sword or an axe
-    private val checkWeapon by boolean("CheckEnemyWeapon", true) { autoBlock == "Packet" && smartAutoBlock }
-
-    // Don't block if target isn't sprinting, since less momentum = less chances of attacking you, and might be running from you
-    // TODO: Rename this option to something else, since it has multiple more checks that verify whether the target is
-    // likely to land a hit on you or not
-    private val checkSprinting by boolean("CheckEnemySprinting", true) { autoBlock == "Packet" && smartAutoBlock }
-
-    // Don't block when you can't get damaged
-    private val targetHurtTimeHandling by choices("TargetHurtTimeHandling", arrayOf("Allow", "Forbid", "Ignore"), "Ignore") { autoBlock == "Packet" && smartAutoBlock }
-    private val targetHurtTime by intRange("TargetHurtTime", 0..1, 0..10) { autoBlock == "Packet" && smartAutoBlock && targetHurtTimeHandling != "Ignore" }
-
-    private val ownHurtTimeHandling by choices("OwnHurtTimeHandling", arrayOf("Allow", "Forbid", "Ignore"), "Ignore") { autoBlock == "Packet" && smartAutoBlock }
-    private val ownHurtTime by intRange("OwnHurtTime", 9..10, 0..10) { autoBlock == "Packet" && smartAutoBlock && ownHurtTimeHandling != "Ignore" }
-
-    // Don't block if target isn't looking at you
-    private val maxDirectionDiff by float("MaxOpponentDirectionDiff", 60f, 30f..180f, suffix = "º") { autoBlock == "Packet" && smartAutoBlock }
-
-    // Don't block if target is swinging an item and therefore cannot attack
-    private val maxSwingProgress by int("MaxOpponentSwingProgress", 1, 0..5) { autoBlock == "Packet" && smartAutoBlock }
 
     // Rotations
     private val options = RotationSettings(this).withoutKeepRotation()
@@ -481,19 +451,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
         if (target != null) {
             val distance = player.getDistanceToEntityBox(target!!)
-
-            if (distance > blockMaxRange) {
-                if (blockStatus) {
-                    stopBlocking(true)
-                }
-            } else {
-                // Trigger true packet blocking when target is in range and conditions are met
-                if (!blockStatus && autoBlock == "Packet" && canBlock) {
+            
+            if (autoBlock != "Off") {
+                renderBlocking = true
+                if (!blockStatus && canBlock && autoBlock == "Packet") {
                     startBlocking(target!!, interactAutoBlock, false)
-                }
-                
-                if (autoBlock != "Off") {
-                    renderBlocking = true
                 }
             }
             
@@ -1111,8 +1073,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                         }
                     }
 
-                    "Cancel" -> {
-                        // Do nothing, full blocking active :p
+                    ""Cancel" -> {
+                            if (target == null) {
+                                sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
                     }
                 }
 
@@ -1279,57 +1242,14 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
      */
     private fun isAlive(entity: EntityLivingBase) = entity.isEntityAlive && entity.health > 0
 
-    /**
+   /**
      * Check if player is able to block
      */
     private val canBlock: Boolean
         get() {
             val player = mc.thePlayer ?: return false
-
-            if (target != null && player.heldItem?.item is ItemSword) {
-                val distance = player.getDistanceToEntityBox(target!!)
-                val targetDistance = target!!.getDistanceToEntityBox(player)
-
-                val rotationDifference = rotationDifference(
-                    toRotation(player.hitBox.center, true, target!!),
-                    target!!.rotation
-                )
-
-                // TODO: Check if player is moving away, on 10 HurtTime (to ignore when the player is taking knockback, thus moving backwards)
-                // Additionally, check for all players that might hit you, instead of just one
-
-                // TODO: Use `when` for all this
-                if (smartAutoBlock) {
-                    val playerAllowed = when (ownHurtTimeHandling) {
-                        "Allow" -> player.hurtTime in ownHurtTime
-                        "Forbid" -> player.hurtTime !in ownHurtTime
-                        else -> true
-                    }
-
-                    val targetAllowed = when (targetHurtTimeHandling) {
-                        "Allow" -> target!!.hurtTime in targetHurtTime
-                        "Forbid" -> target!!.hurtTime !in targetHurtTime
-                        else -> true
-                    }
-
-                    when {
-                        !player.isMoving && forceBlock -> return true
-                        checkWeapon && target!!.heldItem?.item !is ItemSword && target!!.heldItem?.item !is ItemAxe -> return false
-                        checkSprinting && !target!!.isSprinting && distance > 2.8f && rotationDifference > 60f / distance -> return false
-                        !playerAllowed || !targetAllowed -> return false
-                        rotationDifference > maxDirectionDiff -> return false
-                        target!!.swingProgressInt > maxSwingProgress -> return false
-                    }
-                }
-
-                if (distance > blockMaxRange) return false
-
-                if (targetDistance > blockMaxEnemyRange) return false
-
-                return true
-            }
-
-            return false
+            
+            return target != null && player.heldItem?.item is ItemSword
         }
 
     private val maxRange
