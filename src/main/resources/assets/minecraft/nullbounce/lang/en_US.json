@@ -8,11 +8,11 @@
         "thatonecoder"
     ],
     "translations": {
-        "menu.altManager": "Alt Manager",
-        "menu.fontManager": "Font Manager",
-        "menu.mods": "Mods",
+        "menu.altManager": "Accounts",
+        "menu.fontManager": "Fonts",
+        "menu.mods": "Forge Modlist",
         "menu.serverStatus": "Server Status",
-        "menu.configuration": "Configuration",
+        "menu.configuration": "Client Settings",
         "menu.contributors": "Contributors",
 
         "button.back": "Back",
@@ -25,8 +25,8 @@
 
         "button.altManager.copy": "Copy",
         "button.altManager.login": "Login",
-        "button.altManager.randomAlt": "Random Alt",
-        "button.altManager.randomName": "Random Name",
+        "button.altManager.randomAlt": "Random Account",
+        "button.altManager.randomName": "Random Nick",
         "button.altManager.directLogin": "Direct Login",
         "button.altManager.theAltening": "TheAltening",
         "button.altManager.cape": "Cape",
