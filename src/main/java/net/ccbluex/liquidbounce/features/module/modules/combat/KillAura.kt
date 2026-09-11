@@ -420,7 +420,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
         if (target == null && !blockStopInDead) {
             blockStopInDead = true
-            stopBlocking()
+            stopBlocking(true)
             return@handler
         }
 
@@ -1077,15 +1077,16 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                             switchToSlot(it)
                         }
                     }
-                    
+
                     "Cancel" -> {
-                        // Cancel mode does nothing
+                        return
                     }
                 }
 
                 blockStatus = false
             }
         } else {
+            // Force stop
             if (blockStatus) {
                 sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             }
@@ -1103,7 +1104,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         if (autoBlock == "Packet" && unblockMode == "Cancel") {
             val packet = event.packet
             if (packet is C07PacketPlayerDigging && packet.status == RELEASE_USE_ITEM) {
-                if (target != null || renderBlocking) {
+                if (target != null && blockStatus) {
                     event.cancelEvent()
                     return@handler
                 }
