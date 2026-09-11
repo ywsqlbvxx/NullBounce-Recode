@@ -132,7 +132,7 @@
 
         "module.bedProtectionESP.description": "Allows you to see where the blocks should be placed to protect a bed",
 
-        "module.blink.description": "Suspends all movement packets.",
+        "module.blink.description": "Holds all movement packets.",
 
         "module.blockESP.description": "Allows you to see a selected block through walls.",
 
