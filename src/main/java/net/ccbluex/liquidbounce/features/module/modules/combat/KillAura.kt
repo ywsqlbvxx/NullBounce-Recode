@@ -1137,7 +1137,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
             val packet = event.packet
             if (packet is C07PacketPlayerDigging && packet.status == RELEASE_USE_ITEM) {
                 if (target != null || renderBlocking) {
-                    event.cancel()
+                    event.cancelEvent()
                     return@handler
                 }
             }
