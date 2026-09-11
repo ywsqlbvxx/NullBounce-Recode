@@ -496,6 +496,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                 stopBlocking(true)
             }
         }
+    }
 
     /**
      * Render event
