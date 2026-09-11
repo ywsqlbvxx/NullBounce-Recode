@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.base.Category
+import net.ccbluex.liquidbounce.features.module.base.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.client.BlinkUtils
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPacket
@@ -34,7 +34,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
 
     private val swordMode by choices(
         "SwordMode",
-        arrayOf("Vanilla", "NCP", "UpdatedNCP", "AAC5", "SwitchItem", "SwitchItem2", "InvalidC08", "Blink", "Grim2371"),
+        arrayOf("Vanilla", "Vanilla2", "NCP", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08", "Blink", "Grim2371"),
         "Vanilla"
     )
 
@@ -51,8 +51,14 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
 
     private val consumeForwardMultiplier by float("ConsumeForwardMultiplier", 1f, 0.2F..1f)
     private val consumeStrafeMultiplier by float("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
-    private val consumeFoodOnly by boolean("ConsumeFood", true) { consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F }
-    private val consumeDrinkOnly by boolean("ConsumeDrink", true) { consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F }
+    private val consumeFoodOnly by boolean(
+        "ConsumeFood",
+        true
+    ) { consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F }
+    private val consumeDrinkOnly by boolean(
+        "ConsumeDrink",
+        true
+    ) { consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F }
 
     private val bowPacket by choices(
         "BowMode",
@@ -63,16 +69,16 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
     private val bowForwardMultiplier by float("BowForwardMultiplier", 1f, 0.2F..1f)
     private val bowStrafeMultiplier by float("BowStrafeMultiplier", 1f, 0.2F..1f)
 
-    val soulSand by boolean("SoulSand", true)
-    val slime by boolean("Slime", true)
+    // Blocks
+    val soulSand by boolean("Soulsand", true)
     val liquidPush by boolean("LiquidPush", true)
 
-    @JvmField
-    var wasNoSlowAffected = false
     private var shouldSwap = false
     private var shouldBlink = true
     private var shouldNoSlow = false
+
     private var hasDropped = false
+
     private val BlinkTimer = TickTimer()
 
     // Grim2371 variables
@@ -92,26 +98,121 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         val heldItem = player.heldItem ?: return@handler
         val isUsingItem = usingItemFunc()
 
-        if (!hasMotion && !shouldSwap) return@handler
+        if (!hasMotion && !shouldSwap)
+            return@handler
 
         if (isUsingItem || shouldSwap) {
-            // --- Consume / Sword handling ---
-            if (heldItem.item !is ItemSword && heldItem.item !is ItemBow &&
-                (consumeFoodOnly && heldItem.item is ItemFood ||
+            if (heldItem.item !is ItemSword && heldItem.item !is ItemBow && (consumeFoodOnly && heldItem.item is ItemFood ||
                         consumeDrinkOnly && (heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk))
             ) {
-                when (consumeMode.lowercase()) {
-                    "aac5" -> sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f))
-                    "switchitem" -> if (event.eventState == EventState.PRE) updateSlot()
-                    "updatedncp" -> if (event.eventState == EventState.PRE && shouldSwap) {
+                when (consumeMode) {
+                    "AAC5" ->
+                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f))
+
+                    "SwitchItem" ->
+                        if (event.eventState == EventState.PRE) {
+                            updateSlot()
+                        }
+
+                    "UpdatedNCP" ->
+                        if (event.eventState == EventState.PRE && shouldSwap) {
+                            updateSlot()
+                            sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                            shouldSwap = false
+                        }
+
+                    "InvalidC08" -> {
+                        if (event.eventState == EventState.PRE) {
+                            if (InventoryUtils.hasSpaceInInventory()) {
+                                if (player.ticksExisted % 3 == 0)
+                                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
+                            }
+                        }
+                    }
+
+                    "Intave" -> {
+                        if (event.eventState == EventState.PRE) {
+                            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.UP))
+                        }
+                    }
+                }
+            }
+        }
+
+        if (heldItem.item is ItemBow && (isUsingItem || shouldSwap)) {
+            when (bowPacket) {
+                "AAC5" ->
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f))
+
+                "SwitchItem" ->
+                    if (event.eventState == EventState.PRE) {
+                        updateSlot()
+                    }
+
+                "UpdatedNCP" ->
+                    if (event.eventState == EventState.PRE && shouldSwap) {
                         updateSlot()
                         sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
                         shouldSwap = false
                     }
-                    "invalidc08" -> if (event.eventState == EventState.PRE && InventoryUtils.hasSpaceInInventory() && player.ticksExisted % 3 == 0)
-                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
-                    "intave" -> if (event.eventState == EventState.PRE)
-                        sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.UP))
+
+                "InvalidC08" -> {
+                    if (event.eventState == EventState.PRE) {
+                        if (InventoryUtils.hasSpaceInInventory()) {
+                            if (player.ticksExisted % 3 == 0)
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
+                        }
+                    }
+                }
+            }
+        }
+
+        if (heldItem.item is ItemSword && isUsingItem) {
+            when (swordMode) {
+                "Vanilla2" ->
+                    if (event.eventState == EventState.PRE) {
+                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f))
+                    }
+
+                "NCP" ->
+                    when (event.eventState) {
+                        EventState.PRE -> sendPacket(
+                            C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN)
+                        )
+
+                        EventState.POST -> sendPacket(
+                            C08PacketPlayerBlockPlacement(
+                                BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f
+                            )
+                        )
+
+                        else -> return@handler
+                    }
+
+                "UpdatedNCP" ->
+                    if (event.eventState == EventState.POST) {
+                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                    }
+
+                "AAC5" ->
+                    if (event.eventState == EventState.POST) {
+                        sendPacket(
+                            C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f)
+                        )
+                    }
+
+                "SwitchItem" ->
+                    if (event.eventState == EventState.PRE) {
+                        updateSlot()
+                    }
+
+                "InvalidC08" -> {
+                    if (event.eventState == EventState.PRE) {
+                        if (InventoryUtils.hasSpaceInInventory()) {
+                            if (player.ticksExisted % 3 == 0)
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
+                        }
+                    }
                 }
             }
         }
@@ -137,8 +238,12 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
     val onPacket = handler<PacketEvent> { event ->
         val packet = event.packet
         val player = mc.thePlayer ?: return@handler
-        if (event.isCancelled || shouldSwap) return@handler
 
+        if (event.isCancelled || shouldSwap)
+            return@handler
+
+        // Credit: @ManInMyVan
+        // TODO: Not sure how to fix random grim simulation flag. (Seem to only happen in Loyisa).
         if (consumeMode == "Drop") {
             if (player.heldItem?.item !is ItemFood || !player.isMoving) {
                 shouldNoSlow = false
@@ -146,6 +251,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
             }
 
             val isUsingItem = packet is C08PacketPlayerBlockPlacement && packet.placedBlockDirection == 255
+
             if (!player.isUsingItem) {
                 shouldNoSlow = false
                 hasDropped = false
@@ -157,8 +263,10 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
                 hasDropped = true
             } else if (packet is S2FPacketSetSlot && player.isUsingItem) {
                 if (packet.func_149175_c() != 0 || packet.func_149173_d() != SilentHotbar.currentSlot + 36) return@handler
+
                 event.cancelEvent()
                 shouldNoSlow = true
+
                 player.itemInUse = packet.func_149174_e()
                 if (!player.isUsingItem) player.itemInUseCount = 0
                 player.inventory.mainInventory[SilentHotbar.currentSlot] = packet.func_149174_e()
@@ -168,11 +276,10 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         if (swordMode == "Blink") {
             when (packet) {
                 is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is C01PacketChatMessage, is S01PacketPong -> return@handler
+
                 is C07PacketPlayerDigging, is C02PacketUseEntity, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
                     BlinkTimer.update()
-                    if (shouldBlink && BlinkTimer.hasTimePassed(reblinkTicks) &&
-                        (BlinkUtils.packetsReceived.isNotEmpty() || BlinkUtils.packets.isNotEmpty())
-                    ) {
+                    if (shouldBlink && BlinkTimer.hasTimePassed(reblinkTicks) && (BlinkUtils.packetsReceived.isNotEmpty() || BlinkUtils.packets.isNotEmpty())) {
                         BlinkUtils.unblink()
                         BlinkTimer.reset()
                         shouldBlink = false
@@ -181,18 +288,28 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
                     }
                     return@handler
                 }
-                is S12PacketEntityVelocity -> if (mc.thePlayer.entityId == packet.entityID) {
-                    BlinkUtils.unblink()
-                    return@handler
+
+                // Flush on kb
+                is S12PacketEntityVelocity -> {
+                    if (player.entityId == packet.entityID) {
+                        BlinkUtils.unblink()
+                        return@handler
+                    }
                 }
-                is S27PacketExplosion -> if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
-                    BlinkUtils.unblink()
-                    return@handler
+
+                // Flush on explosion
+                is S27PacketExplosion -> {
+                    if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
+                        BlinkUtils.unblink()
+                        return@handler
+                    }
                 }
-                is C03PacketPlayer -> if (swordMode == "Blink") {
+
+                is C03PacketPlayer -> {
                     if (player.isMoving) {
                         if (player.heldItem?.item is ItemSword && usingItemFunc()) {
-                            if (shouldBlink) BlinkUtils.blink(packet, event)
+                            if (shouldBlink)
+                                BlinkUtils.blink(packet, event)
                         } else {
                             shouldBlink = true
                             BlinkUtils.unblink()
@@ -204,7 +321,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
 
         when (packet) {
             is C08PacketPlayerBlockPlacement -> {
-                if (packet.stack?.item != null && player.heldItem?.item != null && packet.stack.item == mc.thePlayer.heldItem?.item) {
+                if (packet.stack?.item != null && player.heldItem?.item != null && packet.stack.item == player.heldItem?.item) {
                     if ((consumeMode == "UpdatedNCP" && (
                                 packet.stack.item is ItemFood ||
                                         packet.stack.item is ItemPotion ||
@@ -218,24 +335,10 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         }
     }
 
-    val onMotionState = handler<MotionEvent> { event ->
-        val player = mc.thePlayer ?: return@handler
-        val heldItem = player.heldItem ?: return@handler
-        
-        // aeh
-        if (heldItem.item is ItemSword && usingItemFunc() && swordMode.lowercase() == "switchitem2") {
-            if (event.eventState == EventState.POST && player.isMoving) {
-                if (player.ticksExisted % 2 == 0) {
-                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f))
-                }
-            }
-        }
-    }
-
     val onSlowDown = handler<SlowDownEvent> { event ->
         val heldItem = mc.thePlayer.heldItem?.item
 
-        // Grim2371 bypass
+        // Grim2371 bypass check
         if ((swordMode == "Grim2371" && heldItem is ItemSword) ||
             (consumeMode == "Grim2371" && (heldItem is ItemFood || heldItem is ItemPotion || heldItem is ItemBucketMilk)) ||
             (bowPacket == "Grim2371" && heldItem is ItemBow)
@@ -248,22 +351,35 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
             }
         }
 
+        if (heldItem !is ItemSword) {
+            if (!consumeFoodOnly && heldItem is ItemFood ||
+                !consumeDrinkOnly && (heldItem is ItemPotion || heldItem is ItemBucketMilk)
+            ) {
+                return@handler
+            }
+
+            if (consumeMode == "Drop" && !shouldNoSlow)
+                return@handler
+        }
+
         event.forward = getMultiplier(heldItem, true)
         event.strafe = getMultiplier(heldItem, false)
-        if (event.forward < 1f || event.strafe < 1f) wasNoSlowAffected = true
     }
 
     private fun getMultiplier(item: Item?, isForward: Boolean) = when (item) {
         is ItemFood, is ItemPotion, is ItemBucketMilk -> if (isForward) consumeForwardMultiplier else consumeStrafeMultiplier
+
         is ItemSword -> if (isForward) blockForwardMultiplier else blockStrafeMultiplier
+
         is ItemBow -> if (isForward) bowForwardMultiplier else bowStrafeMultiplier
+
         else -> 0.2F
     }
 
     fun isUNCPBlocking() =
         swordMode == "UpdatedNCP" && mc.gameSettings.keyBindUseItem.isKeyDown && (mc.thePlayer.heldItem?.item is ItemSword)
 
-    private fun usingItemFunc() =
+    fun usingItemFunc() =
         mc.thePlayer?.heldItem != null && (mc.thePlayer.isUsingItem || (mc.thePlayer.heldItem?.item is ItemSword && KillAura.blockStatus) || isUNCPBlocking())
 
     private fun updateSlot() {
