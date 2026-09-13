@@ -806,10 +806,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
         if (shouldPrioritize()) return
 
-        if (player.isBlocking && (autoBlock == "Off" && blockStatus || autoBlock == "Packet" && releaseAutoBlock && blockTicks.hasTimePassed(blockLength))) {
+        if (autoBlock != "Off" && player.isBlocking && (blockStatus || (autoBlock == "Packet" && releaseAutoBlock && blockTicks.hasTimePassed(blockLength)))) {
             stopBlocking()
 
-            if (!ignoreTickRule || autoBlock == "Off") {
+            if (!ignoreTickRule) {
                 return
             }
         }
@@ -1050,11 +1050,16 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
     }
 
-    /**
+/**
      * Stop blocking
      */
     private fun stopBlocking(forceStop: Boolean = false) {
         val player = mc.thePlayer ?: return
+
+        // this is for Vanilla
+        if (unblockMode == "Cancel" && !forceStop && target != null) {
+            return
+        }
 
         if (!forceStop) {
             if (blockStatus && !player.isBlocking) {
@@ -1062,35 +1067,26 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
                     "Stop" -> {
                         sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
                     }
-
                     "Switch" -> {
                         switchToSlot((SilentHotbar.currentSlot + 1) % 9)
                     }
-
                     "Empty" -> {
                         player.inventory.firstEmptyStack.takeIf { it in 0..8 }.let {
                             if (it == null) {
                                 sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
                                 return@let
                             }
-
                             switchToSlot(it)
                         }
                     }
-
-                    "Cancel" -> {
-                        return
-                    }
+                    "Cancel" -> { /* This mode is only for vanilla */ }
                 }
-
                 blockStatus = false
             }
         } else {
-            // Force stop
             if (blockStatus) {
                 sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             }
-
             blockStatus = false
         }
 
